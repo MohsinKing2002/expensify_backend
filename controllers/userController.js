@@ -3,18 +3,32 @@ import {
   HashPasswords,
   ResponseHandler,
   GenerateToken,
+  MatchPasswords,
 } from "../utils/index.js";
 
 /************************************* login function ***************************************/
 export const LoginUser = async (req, res, next) => {
   try {
-    // const {email, }
+    const { email, password } = req.body;
+    let user = await DBUser.findOne({ email }).select("+password");
+    //if user not found then return
+    if (!user) return ResponseHandler(res, 404, "User not found !");
+
+    // match password
+    const isPasswordMatched = await MatchPasswords(password, user.password);
+    if (!isPasswordMatched)
+      return ResponseHandler(res, 404, "Password not matched !");
+
+    const token = GenerateToken(user._id);
+    user = { ...user.toObject(), token };
+
+    return ResponseHandler(res, 200, "Logged in", user);
   } catch (error) {
     console.log("login error ->", error);
   }
 };
 
-/************************************* login function ***************************************/
+/************************************* register function ***************************************/
 export const RegisterUser = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
@@ -27,17 +41,9 @@ export const RegisterUser = async (req, res, next) => {
     if (!user) return ResponseHandler(res, 400, "Failed to create user");
     let token = GenerateToken(user._id);
 
-    user = { ...user, token };
+    user = { ...user.toObject(), token };
     return ResponseHandler(res, 200, "User Created !", user);
   } catch (error) {
-    console.log("login error ->", error);
-  }
-};
-
-/************************************* login function ***************************************/
-export const name = async (req, res, next) => {
-  try {
-  } catch (error) {
-    console.log("login error ->", error);
+    console.log("register error ->", error);
   }
 };
