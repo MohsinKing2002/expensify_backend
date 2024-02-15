@@ -1,3 +1,4 @@
+import { DBExpense } from "../models/expense.js";
 import { DBUser } from "../models/user.js";
 import {
   HashPasswords,
@@ -45,5 +46,39 @@ export const RegisterUser = async (req, res, next) => {
     return ResponseHandler(res, 200, "User Created !", user);
   } catch (error) {
     console.log("register error ->", error);
+  }
+};
+
+/************************************* update profile function ***************************************/
+export const UpdateProfile = async (req, res, next) => {
+  try {
+    const { name, email } = req.body;
+    const { _id } = req.user;
+
+    //find user and update
+    const user = await DBUser.findOne({ _id });
+    if (name) user.name = name;
+    if (email) user.email = email;
+
+    await user.save();
+
+    return ResponseHandler(res, 200, "Profile updated !", user);
+  } catch (error) {
+    console.log("profile update error ->", error);
+  }
+};
+
+/************************************* delete profile function ***************************************/
+export const deleteProfile = async (req, res, next) => {
+  try {
+    const { _id } = req.user;
+    //delete all expenses of user from expense db
+    await DBExpense.deleteMany({ user: _id });
+
+    await DBUser.deleteOne({ _id });
+
+    return ResponseHandler(res, 200, "Profile deleted !");
+  } catch (error) {
+    console.log("profile delete error ->", error);
   }
 };

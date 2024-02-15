@@ -22,5 +22,5 @@ export const MatchPasswords = async (password, userPassword) => {
 };
 
 export const GenerateToken = (_id) => {
-  return jwt.sign({ _id }, process.env.SECRET_KEY);
+  return jwt.sign({ _id }, process.env.SECRET_KEY, { expiresIn: "7d" });
 };

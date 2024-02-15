@@ -24,15 +24,46 @@ export const CreateExpense = async (req, res, next) => {
   }
 };
 
-/************************************* create expense ***************************************/
-export const GetExpenses = async (req, res, next) => {
+/************************************* update expense ***************************************/
+export const UpdateExpense = async (req, res, next) => {
   try {
-    const { _id } = req.user;
-    const expenses = await DBExpense.find({ user: _id });
+    const { expense_id, amount, category, time } = req.body;
 
-    return ResponseHandler(res, 200, "Fetched expenses", expenses);
+    const expense = await DBExpense.findOne({ _id: expense_id });
+    if (!expense) return ResponseHandler(res, 404, "Expense not found.");
+    if (amount) expense.amount = amount;
+    if (category) expense.category = category;
+    if (time) expense.time = time;
+
+    await expense.save();
+
+    ResponseHandler(res, 200, "Updated expense", expense);
   } catch (error) {
-    console.log("get expense error ->", error);
+    console.log("update expense error ->", error);
+  }
+};
+
+/************************************* delete expense ***************************************/
+export const DeleteExpense = async (req, res, next) => {
+  try {
+    const { expense_id } = req.body;
+
+    const expense = await DBExpense.findOne({ _id: expense_id });
+    if (!expense) return ResponseHandler(res, 404, "Expense not found.");
+
+    //delte the specific entry
+    await DBExpense.deleteOne({ _id: expense_id });
+
+    //remove from user's exepnse array
+    const user = req.user;
+    await DBUser.updateOne(
+      { _id: user._id },
+      { $pull: { expenses: expense_id } }
+    );
+
+    ResponseHandler(res, 200, "deleted expense");
+  } catch (error) {
+    console.log("delete expense error ->", error);
   }
 };
 
